@@ -4,57 +4,51 @@ class AlarmClock {
 		this.intervalId = null;
 	}
 	addClock(time, callback) {
-		this.time = time;
-		this.callback = callback;
 		if (!time || !callback) {
 			throw new Error('Отсутствуют обязательные аргументы');
 		}
 
-		this.alarmCollection.find((callTime) => {
-			if (callTime === this.time) {
+		this.alarmCollection.some((callTime) => {
+			if (callTime.time === this.time) {
 				console.warn('Уже присутствует звонок на это же время');
 			}
 		});
-		let call = {
-			time: this.time,
-			callback: this.callback,
-			canCall: true
-		}
 
-		this.alarmCollection.push(call);
+		this.alarmCollection.push(
+			{time: time,
+			callback: callback,
+			canCall: true
+			});
 	}
 	removeClock(time) {
 		this.alarmCollection = this.alarmCollection.filter((deleteTime) => deleteTime.time !== time);
 
 	}
 	getCurrentFormattedTime() {
-		let date = new Date();
-		let options = {
-			hour: 'numeric',
-			minute: 'numeric'
-		}
-
-		return date.toLocaleString('ru', options)
+		return new Date().toLocaleString('ru', {
+				hour: 'numeric',
+				minute: 'numeric'
+			})
 	}
 
 	start() {
-		if (!this.intervalId) {
+		if (this.intervalId) {
 			return
-		}
+		} 
+
 		this.intervalId = setInterval(() => {
 			this.alarmCollection.forEach((call) => {
-				if (call.time === getCurrentFormattedTime() && call.canCall === true) {
+				if (call.time === this.getCurrentFormattedTime() && call.canCall === true) {
 					call.canCall = false;
-					this.callback();
+					call.callback();
 				}
 			})
 		}, 1000)
 	}
 
 	stop() {
-		function clearInterval() {
-			intervalId = null;
-		}
+		clearInterval(this.intervalId);
+		this.intervalId = null;
 	}
 
 	resetAllCalls() {
@@ -64,7 +58,7 @@ class AlarmClock {
 	}
 
 	clearAlarms() {
-		stop();
+		this.stop();
 		this.alarmCollection = [];
 	}
 }
